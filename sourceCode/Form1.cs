@@ -94,8 +94,8 @@ namespace WindowsFormsApp2
         }
 
         private void timer1_Tick(object sender, EventArgs e)
-        {//后续应修改为绑定数据更新
-            label1.Text = "combo : " + newgame.combo + "\nscore : " + newgame.Score;
+        {
+            label1.Text = "combo : " + newgame.combo + "\nscore : " + newgame.Score + "\n" + newgame.tracks[0].keyHold.ToString() + newgame.tracks[0].cnt;
         }
     }
 }

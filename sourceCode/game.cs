@@ -11,7 +11,7 @@ namespace WindowsFormsApp2
 {
     public class game 
     {
-        long startTime;
+        public static long startTime;
         public int combo;
         public int trackNum;
         public Track[] tracks;
@@ -81,7 +81,6 @@ namespace WindowsFormsApp2
             startTime = Info.now();
             ok = true;
             new Task(gaming).Start();
-            new Task(draw).Start();
         }
         public void judge()
         {//检测note
@@ -91,19 +90,12 @@ namespace WindowsFormsApp2
                 trackJudge(gameTime, i);
             }
         }
-        public void draw()
-        {
-            while (ok)
-            {
-                paint(g);
-            }
-        }
         public void gaming()
         {
             while (ok)
             {
                 judge();
-                Thread.Sleep(1);
+                paint(g);   
             }
         }
         public void lisenKey(int chose, bool stat)
@@ -176,7 +168,7 @@ namespace WindowsFormsApp2
             g.DrawImage(cacheImage, 0, 0);
         }
         void paintCombo(Graphics g)
-        {//TODO
+        {
            // g.DrawString(combo.ToString(), null, ,Info.trackX[2], Info.baseJudgeLine - 200);
         }
         void paintClick(int track, int chose, float y, Graphics g)

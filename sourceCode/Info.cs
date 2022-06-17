@@ -28,6 +28,8 @@ namespace WindowsFormsApp2
         {
             return (long)(DateTime.UtcNow - Jan1st1970).TotalMilliseconds;
         }
+        // 判定
+        public static int holdCount = 10;
         // 绘制
         public static int xShift = 10;
         public static int noteWeight = 60;

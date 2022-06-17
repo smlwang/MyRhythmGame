@@ -8,6 +8,7 @@ namespace WindowsFormsApp2
         public List<note> track;
         public bool keyCheck = false;
         public bool keyHold = false;
+        public int cnt = 0;
         public Track()
         {
             track = new List<note>();
@@ -15,11 +16,18 @@ namespace WindowsFormsApp2
         public void keyChange(bool pressed)
         {
             keyCheck = pressed;
-            if(!pressed) keyHold = false;
+            if (!pressed) { 
+                keyHold = false;
+                cnt = 0;
+                return;
+            }
         }
-        //deltaTime 距离游戏开始时间
+         //deltaTime 距离游戏开始时间
         public int judge(long gameTime)
         {   
+            if(keyCheck)
+                cnt = Math.Min(Info.holdCount, cnt + 1);
+            if(cnt >= Info.holdCount) keyHold = true;
             if(track.Count == 0) return 0;
             note note = track[0];
             // deltaTime 与判定时间的差
@@ -58,7 +66,7 @@ namespace WindowsFormsApp2
                 if(!note.preCheck && Math.Abs(deltaTime) <= Info.greatJudge)//长条头判
                 {   
                     if(keyHold || !keyCheck) return Info.noAct;
-                    keyHold = true;
+                    keyHold = keyCheck;
                     track[0].preCheck = true;
                     note.preCheck = true;
                     return Info.perfect;
@@ -78,6 +86,7 @@ namespace WindowsFormsApp2
                 return Info.good;
             return Info.miss;
         }
+
 
     }
 }
