@@ -44,7 +44,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(683, 295);
+            this.button1.Location = new System.Drawing.Point(779, 285);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(123, 54);
             this.button1.TabIndex = 0;
@@ -56,14 +56,14 @@
             // 
             this.pictureBox1.Location = new System.Drawing.Point(8, 8);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(636, 595);
+            this.pictureBox1.Size = new System.Drawing.Size(733, 685);
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
             this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click_1);
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(683, 390);
+            this.button2.Location = new System.Drawing.Point(779, 401);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(123, 54);
             this.button2.TabIndex = 2;
@@ -74,7 +74,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(686, 131);
+            this.label1.Location = new System.Drawing.Point(804, 142);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(55, 15);
             this.label1.TabIndex = 3;
@@ -85,7 +85,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(930, 614);
+            this.ClientSize = new System.Drawing.Size(989, 705);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.pictureBox1);

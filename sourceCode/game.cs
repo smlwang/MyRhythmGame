@@ -52,7 +52,7 @@ namespace WindowsFormsApp2
             {
                 int kind = (int)Int64.Parse(src[i]);//note类型
                 int trackNo = (int)Int64.Parse(src[i + 1]) - 1;//轨道
-                long time = (long)(float.Parse(src[i + 2]) * 1000);//时间
+                long time = (long)(float.Parse(src[i + 2]) * 1000f);//时间
                 note newNote = new note
                 {
                     kind = kind,
@@ -67,10 +67,6 @@ namespace WindowsFormsApp2
                 }
                 tracks[trackNo].track.Add(newNote);
                 i += 3; 
-            }
-            for(int i = 0; i < trackNum; i++)
-            {
-                tracks[i].track.Sort();
             }
             sr.Close();
         }
@@ -132,30 +128,28 @@ namespace WindowsFormsApp2
         }
         public void paint(Graphics g)
         {
-            cacheG.Clear(Color.White);
-            if(combo > 5)
-            {
-                paintCombo(cacheG);
-            }
+            cacheG.Clear(Color.Black);
             long gameTime = GameTime();
             for(int i = 0; i < trackNum; i++)
             {
                 for(int j = 0; j < tracks[i].track.Count; j++)
                 {
                     note cur = tracks[i].track[j];
-                    if (cur.start - gameTime > 5000) break;
+                    //if (cur.start - gameTime > 5000) break;
                     long deltaTime = cur.end - gameTime;
                     int chose = 1;
                     if (i == 0 || i == 3) chose = 0;
                     if(cur.kind == 1)
                     {
-                        float y = Info.baseJudgeLine - Info.imgShift - Info.speed * deltaTime;
+                        float noShift = Info.baseJudgeLine - Info.speed * deltaTime;
+                        float y = noShift - Info.imgShift;
                         paintClick(i, chose, y, cacheG);
+                        paintPerfect(i, noShift, cacheG);
                     }
                     else
                     {
                         float y = Info.baseJudgeLine - Info.speed * deltaTime;
-                        float len = Info.speed * (cur.end - Math.Max(gameTime - Info.greatJudge, cur.start));
+                        float len = Info.speed * (cur.end - cur.start);
                         paintHold(i, chose, y, len, cacheG);
                     }
                 }
@@ -173,19 +167,23 @@ namespace WindowsFormsApp2
         }
         void paintClick(int track, int chose, float y, Graphics g)
         {
-            g.DrawImage(Info.clickimg[chose], Info.trackX[track], y, Info.noteWeight, 25);
+            g.DrawImage(Info.clickimg[chose], Info.trackX[track], y, Info.noteWeight, 40);
         }
         void paintHold(int track, int chose, float y, float len, Graphics g)
         {
-            g.DrawImage(Info.clickimg[chose], Info.trackX[track], y, Info.noteWeight, len);
+            g.DrawImage(Info.holdimg[chose], Info.trackX[track], y, Info.noteWeight, len);
         }
         void paintJudgeLine(Graphics g)
         {
-            g.DrawImage(Info.judgeLine, Info.trackX[0] - 1, Info.baseJudgeLine - 2, 4*Info.noteWeight + Info.xShift, 6);
+            g.DrawImage(Info.judgeLine, Info.trackX[0] - Info.xShift, Info.baseJudgeLine - 3, 4*Info.noteWeight + 2 * Info.xShift, 6);
+        }
+        void paintPerfect(int track, float y, Graphics g)
+        {
+            g.DrawImage(Info.perfectLine, Info.trackX[track], y, Info.noteWeight, 2);
         }
         public void paintHit(int track, Graphics g)
         {
-            g.DrawImage(Info.hit, Info.trackX[track], Info.baseJudgeLine, Info.noteWeight, 30);
+            g.DrawImage(Info.hit, Info.trackX[track], Info.baseJudgeLine, Info.noteWeight, 60);
         }
     }
 }

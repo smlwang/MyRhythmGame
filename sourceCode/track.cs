@@ -6,25 +6,44 @@ namespace WindowsFormsApp2
     public class Track
     {
         public List<note> track;
+        bool keyPressed;
         public bool keyCheck = false;
         public bool keyHold = false;
         public int cnt = 0;
+        public int cancel = 0;
         public Track()
         {
             track = new List<note>();
         }
         public void keyChange(bool pressed)
-        {
-            keyCheck = pressed;
-            if (!pressed) { 
+        {   
+            keyPressed = pressed;
+            if (pressed)
+            {
+                keyCheck = true;
                 keyHold = false;
+                cancel = 0;
                 cnt = 0;
                 return;
             }
+            cancel++;
         }
          //deltaTime 距离游戏开始时间
         public int judge(long gameTime)
-        {   
+        {
+            if (!keyPressed)
+            {
+                cancel++;
+                if(cancel > 5)
+                {
+                    keyReset();
+                }
+            }
+            if (!keyCheck && !keyHold)
+            {
+                keyHold = false;
+                cnt = 0;
+            }
             if(keyCheck)
                 cnt = Math.Min(Info.holdCount, cnt + 1);
             if(cnt >= Info.holdCount) keyHold = true;
@@ -33,7 +52,7 @@ namespace WindowsFormsApp2
             // deltaTime 与判定时间的差
             if(!keyCheck)
             {
-                if(note.end - gameTime < -Info.goodJudge)
+                if(note.end - gameTime < -Info.greatJudge)
                 {
                     track.RemoveAt(0);
                     return Info.miss;
@@ -50,43 +69,72 @@ namespace WindowsFormsApp2
                 if (keyHold) return Info.noAct;
                 keyHold = keyCheck;
                 track.RemoveAt(0);
-                return clickJudge(Math.Abs(deltaTime));
+                if(!keyPressed)
+                {
+                    keyReset();
+                }
+                return clickJudge(deltaTime);
             }
             else
             {
-                if(note.end < gameTime)//长条尾判
+                if(note.end < gameTime - Info.perfectJudge)//长条尾判
                 {
                     track.RemoveAt(0);
-                    if(note.preCheck && (keyHold || keyCheck))
-                    {
+                    if (note.preCheck && keyCheck)
                         return Info.perfect;
-                    }
                     return Info.miss;
                 }
-                if(!note.preCheck && Math.Abs(deltaTime) <= Info.greatJudge)//长条头判
+                if(!note.preCheck)//长条头判
                 {   
-                    if(keyHold || !keyCheck) return Info.noAct;
-                    keyHold = keyCheck;
-                    track[0].preCheck = true;
-                    note.preCheck = true;
-                    return Info.perfect;
+                    if(keyHold) return Info.noAct;
+                    if(Math.Abs(deltaTime) <= Info.greatJudge)
+                    {
+                        track[0].preCheck = true;
+                        keyHold = keyCheck;
+                        return Info.perfect;
+                    }else if(deltaTime < -Info.greatJudge)
+                    {
+                        track[0].preCheck = true;
+                        keyHold = keyCheck;
+                        return Info.good;
+                    }
+                    return Info.noAct;
                 }
-                if(note.preCheck && keyHold)
+                if(note.preCheck)
                     track[0].start = Math.Max(gameTime, note.start);
                 return Info.noAct;
             }
         }
         public int clickJudge(long deltaTime)
         {
-            if (deltaTime <= Info.perfectJudge)
-                return Info.perfect;
-            if(deltaTime <= Info.greatJudge)
-                return Info.great;
-            if(deltaTime <= Info.goodJudge)
-                return Info.good;
+            if(deltaTime >= 0)
+            {
+                if (deltaTime <= Info.perfectJudge)
+                    return Info.perfect;
+                if(deltaTime <= Info.greatJudge)
+                    return Info.great;
+                if(deltaTime <= Info.goodJudge)
+                    return Info.good;
+            }
+            else
+            {
+                deltaTime = -deltaTime;
+                if (deltaTime <= Info.perfectJudge)
+                    return Info.perfect;
+                if(deltaTime <= Info.greatJudge)
+                    return Info.great;
+                if (deltaTime < Info.goodJudge)
+                    return Info.good;
+            }
             return Info.miss;
         }
-
+        public void keyReset()
+        {
+            keyCheck = false;
+            keyHold = false;
+            cnt = 0;
+            cancel = 0;
+        }
 
     }
 }

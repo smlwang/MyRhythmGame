@@ -95,7 +95,7 @@ namespace WindowsFormsApp2
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            label1.Text = "combo : " + newgame.combo + "\nscore : " + newgame.Score + "\n" + newgame.tracks[0].keyHold.ToString() + newgame.tracks[0].cnt;
+            label1.Text = "combo : " + newgame.combo + "\nscore : " + newgame.Score;
         }
     }
 }
