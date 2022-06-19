@@ -11,17 +11,22 @@ namespace WindowsFormsApp2
 {
     public class game 
     {
+        int combo;
+        long Score;
+        int trackNum;
+
         public static long startTime;
-        public int combo;
-        public int trackNum;
-        public Track[] tracks;
         public int maxCombo;
-        public long Score;
+        public Track[] tracks;
+        
+        judgeNode []judgeQue;
+
         System.Media.SoundPlayer soundPlayer;
-        bool ok = true;
+        bool run = true;
         Bitmap cacheImage;
         Graphics cacheG;
         Graphics g;
+        
         //offset 为正 音符出现更晚， 负 更早
         public game(int trackNum, System.IO.Stream music, string trackInfo, long offset, Size size, Graphics g)
         {//TODO: 加载音乐和铺面
@@ -30,11 +35,48 @@ namespace WindowsFormsApp2
             maxCombo = 0;
             cacheImage = new Bitmap(size.Width, size.Height);
             cacheG = Graphics.FromImage(cacheImage);
+            judgeQue = new judgeNode[trackNum];
             PrepareMusic(music);
             PrepareTrack(trackNum, trackInfo);
             startTime -= offset;
             this.g = g;
         }
+        public void starts()//游戏开始
+        {
+            soundPlayer.Load();
+            soundPlayer.Play();
+            startTime = Info.now();
+            run = true;
+            new Task(gaming).Start();
+        }
+        public void gaming()
+        {
+            while (run)
+            {   
+                cacheG.Clear(Color.Black);
+                judge();
+                paint(g);   
+            }
+        }
+        public void lisenKey(int chose, bool stat)
+        {
+            if(run)
+            {
+                if (chose == -1) return;
+                tracks[chose].keyChange(stat);
+            }
+        }
+        public long GameTime()
+        {
+            return Info.now() - startTime;
+        }
+        public void exitGame()
+        {
+            soundPlayer.Stop();
+            soundPlayer.Dispose();
+            run = false;
+        }
+        
         void PrepareMusic(System.IO.Stream music)
         {
             soundPlayer = new System.Media.SoundPlayer(music);
@@ -70,15 +112,7 @@ namespace WindowsFormsApp2
             }
             sr.Close();
         }
-        public void starts()//游戏开始
-        {
-            soundPlayer.Load();
-            soundPlayer.Play();
-            startTime = Info.now();
-            ok = true;
-            new Task(gaming).Start();
-        }
-        public void judge()
+        void judge()
         {//检测note
             long gameTime = GameTime();
             for (int i = 0; i < trackNum; i++)
@@ -86,29 +120,15 @@ namespace WindowsFormsApp2
                 trackJudge(gameTime, i);
             }
         }
-        public void gaming()
-        {
-            while (ok)
-            {
-                judge();
-                paint(g);   
-            }
-        }
-        public void lisenKey(int chose, bool stat)
-        {
-            if(ok)
-            {
-                if (chose == -1) return;
-                tracks[chose].keyChange(stat);
-            }
-        }
-        public void trackJudge(long gameTime, int trackNo)
+        void trackJudge(long gameTime, int trackNo)
         {
             int stat = tracks[trackNo].judge(gameTime);
             if (stat == Info.noAct) return;
+            judgeQue[trackNo] = new judgeNode(stat, trackNo, gameTime + Info.showJudge);
             if(stat == Info.miss)
             {
                 combo = 0;
+                
                 return;
             }
             combo++;
@@ -116,19 +136,11 @@ namespace WindowsFormsApp2
                 maxCombo = combo;
             Score += Info.scoreFrac * stat;
         }
-        public long GameTime()
+        void paint(Graphics g)
         {
-            return Info.now() - startTime;
-        }
-        public void exitGame()
-        {
-            soundPlayer.Stop();
-            soundPlayer.Dispose();
-            ok = false;
-        }
-        public void paint(Graphics g)
-        {
-            cacheG.Clear(Color.Black);
+            if(combo >= Info.minComboToShow)
+                paintCombo(cacheG);
+            paintScore(cacheG);
             long gameTime = GameTime();
             for(int i = 0; i < trackNum; i++)
             {
@@ -154,16 +166,28 @@ namespace WindowsFormsApp2
                     }
                 }
                 paintJudgeLine(cacheG);
-                if (tracks[i].keyCheck)
+                if (tracks[i].keyPressed)
                 {
                     paintHit(i, cacheG);
+                }
+            }
+            for(int i = 0; i < trackNum; i++)
+            {
+                if (judgeQue[i] == null) continue;
+                if(gameTime < judgeQue[i].end)
+                {
+                    cacheG.DrawString(Info.judgeImg[judgeQue[i].stat], Info.drawFont, Info.drawBrush, Info.trackX[i], Info.baseJudgeLine - 150);
                 }
             }
             g.DrawImage(cacheImage, 0, 0);
         }
         void paintCombo(Graphics g)
         {
-           // g.DrawString(combo.ToString(), null, ,Info.trackX[2], Info.baseJudgeLine - 200);
+            g.DrawString("combo      " + combo.ToString(), Info.drawFont, Info.drawBrush,Info.trackX[1] - Info.xShift, Info.baseJudgeLine - 200);
+        }
+        void paintScore(Graphics g)
+        {
+            g.DrawString("score     " + Score.ToString(), Info.drawFont, Info.drawBrush, Info.trackX[1] - Info.xShift, Info.baseJudgeLine - 300);
         }
         void paintClick(int track, int chose, float y, Graphics g)
         {
@@ -181,9 +205,10 @@ namespace WindowsFormsApp2
         {
             g.DrawImage(Info.perfectLine, Info.trackX[track], y, Info.noteWeight, 2);
         }
-        public void paintHit(int track, Graphics g)
+        void paintHit(int track, Graphics g)
         {
             g.DrawImage(Info.hit, Info.trackX[track], Info.baseJudgeLine, Info.noteWeight, 60);
         }
+
     }
 }

@@ -6,11 +6,14 @@ namespace WindowsFormsApp2
     public class Track
     {
         public List<note> track;
-        bool keyPressed;
-        public bool keyCheck = false;
-        public bool keyHold = false;
-        public int cnt = 0;
-        public int cancel = 0;
+        
+        public bool keyPressed;
+        bool keyPress = false;
+        bool keyHold = false;
+
+        int holdCnt = 0;
+        int pressCancel = 0;
+
         public Track()
         {
             track = new List<note>();
@@ -20,37 +23,37 @@ namespace WindowsFormsApp2
             keyPressed = pressed;
             if (pressed)
             {
-                keyCheck = true;
+                keyPress = true;
                 keyHold = false;
-                cancel = 0;
-                cnt = 0;
+                pressCancel = 0;
+                holdCnt = 0;
                 return;
             }
-            cancel++;
+            pressCancel++;
         }
          //deltaTime 距离游戏开始时间
         public int judge(long gameTime)
         {
             if (!keyPressed)
             {
-                cancel++;
-                if(cancel > 5)
+                pressCancel++;
+                if(pressCancel > Info.pressCancelCnt)
                 {
                     keyReset();
                 }
             }
-            if (!keyCheck && !keyHold)
+            if (!keyPress && !keyHold)
             {
                 keyHold = false;
-                cnt = 0;
+                holdCnt = 0;
             }
-            if(keyCheck)
-                cnt = Math.Min(Info.holdCount, cnt + 1);
-            if(cnt >= Info.holdCount) keyHold = true;
-            if(track.Count == 0) return 0;
+            if(keyPress)
+                holdCnt = Math.Min(Info.holdJudgeCnt, holdCnt + 1);
+            if(holdCnt >= Info.holdJudgeCnt) keyHold = true;
+            if(track.Count == 0) return Info.noAct;
             note note = track[0];
             // deltaTime 与判定时间的差
-            if(!keyCheck)
+            if(!keyPress)
             {
                 if(note.end - gameTime < -Info.greatJudge)
                 {
@@ -60,47 +63,48 @@ namespace WindowsFormsApp2
                 return Info.noAct;
             }
             long deltaTime = note.start - gameTime;
-            if(deltaTime > Info.good) // 没到前判不判定
+            if(deltaTime > Info.goodJudge) // 没到前判不判定
             {
                 return Info.noAct;
             }
-            if(note.kind == 1)
+            if (note.kind == 1)
             {
                 if (keyHold) return Info.noAct;
-                keyHold = keyCheck;
                 track.RemoveAt(0);
-                if(!keyPressed)
+                if (!keyPressed)
                 {
                     keyReset();
                 }
+                keyHold = keyPress;
                 return clickJudge(deltaTime);
             }
             else
             {
-                if(note.end < gameTime - Info.perfectJudge)//长条尾判
+                if (note.end < gameTime - Info.perfectJudge)//长条尾判
                 {
                     track.RemoveAt(0);
-                    if (note.preCheck && keyCheck)
+                    if (note.preCheck && keyPress)
                         return Info.perfect;
                     return Info.miss;
                 }
-                if(!note.preCheck)//长条头判
-                {   
-                    if(keyHold) return Info.noAct;
-                    if(Math.Abs(deltaTime) <= Info.greatJudge)
+                if (!note.preCheck)//长条头判
+                {
+                    if (keyHold) return Info.noAct;
+                    if (Math.Abs(deltaTime) <= Info.greatJudge)
                     {
                         track[0].preCheck = true;
-                        keyHold = keyCheck;
+                        keyHold = keyPress;
                         return Info.perfect;
-                    }else if(deltaTime < -Info.greatJudge)
+                    }
+                    else if (deltaTime < -Info.greatJudge)
                     {
                         track[0].preCheck = true;
-                        keyHold = keyCheck;
+                        keyHold = keyPress;
                         return Info.good;
                     }
                     return Info.noAct;
                 }
-                if(note.preCheck)
+                if (note.preCheck) 
                     track[0].start = Math.Max(gameTime, note.start);
                 return Info.noAct;
             }
@@ -130,10 +134,10 @@ namespace WindowsFormsApp2
         }
         public void keyReset()
         {
-            keyCheck = false;
+            keyPress = false;
             keyHold = false;
-            cnt = 0;
-            cancel = 0;
+            pressCancel = 0;
+            holdCnt = 0;
         }
 
     }

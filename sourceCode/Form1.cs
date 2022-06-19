@@ -20,14 +20,7 @@ namespace WindowsFormsApp2
             
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            
-        }
         
-        protected override void OnPaint(PaintEventArgs e)
-        {
-        }
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             int chose = -1;
@@ -54,11 +47,6 @@ namespace WindowsFormsApp2
             KeyPreview = true;
             newgame.starts();
             timer1.Enabled = true;
-        }
-
-        private void pictureBox1_Click_1(object sender, EventArgs e)
-        {
-
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -89,13 +77,9 @@ namespace WindowsFormsApp2
 
         }
 
-        private void label1_BindingContextChanged(object sender, EventArgs e)
-        {
-        }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            label1.Text = "combo : " + newgame.combo + "\nscore : " + newgame.Score;
         }
     }
 }

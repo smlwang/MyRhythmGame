@@ -19,4 +19,16 @@ namespace WindowsFormsApp2
             return 0;
         }
     }
+    public class judgeNode
+    {
+        public int stat;
+        public int track;
+        public long end;
+        public judgeNode(int stat, int track, long end)
+        {
+            this.stat = stat;
+            this.track = track;
+            this.end = end;
+        }
+    }
 }
