@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Windows.Forms;
-using System.ComponentModel;
-
+using System.Runtime.CompilerServices;
 namespace WindowsFormsApp2
 {
     public class game 
@@ -14,21 +10,22 @@ namespace WindowsFormsApp2
         int combo;
         long Score;
         int trackNum;
-
+        bool paused = false;
         public static long startTime;
         public int maxCombo;
         public Track[] tracks;
-        
+        public long pauseTime;
         judgeNode []judgeQue;
-
-        System.Media.SoundPlayer soundPlayer;
+        WMPLib.WindowsMediaPlayer wm = new WMPLib.WindowsMediaPlayer();
+        //System.Media.SoundPlayer soundPlayer;
+        
         bool run = true;
         Bitmap cacheImage;
         Graphics cacheG;
         Graphics g;
         
         //offset 为正 音符出现更晚， 负 更早
-        public game(int trackNum, System.IO.Stream music, string trackInfo, long offset, Size size, Graphics g)
+        public game(int trackNum, string music, string trackInfo, long offset, Size size, Graphics g)
         {//TODO: 加载音乐和铺面
             Score = 0;
             combo = 0;
@@ -43,8 +40,8 @@ namespace WindowsFormsApp2
         }
         public void starts()//游戏开始
         {
-            soundPlayer.Load();
-            soundPlayer.Play();
+            wm.settings.volume = 100;
+            wm.controls.play();
             startTime = Info.now();
             run = true;
             new Task(gaming).Start();
@@ -60,11 +57,8 @@ namespace WindowsFormsApp2
         }
         public void lisenKey(int chose, bool stat)
         {
-            if(run)
-            {
-                if (chose == -1) return;
-                tracks[chose].keyChange(stat);
-            }
+            if (chose == -1) return;
+            tracks[chose].keyChange(stat);
         }
         public long GameTime()
         {
@@ -72,14 +66,29 @@ namespace WindowsFormsApp2
         }
         public void exitGame()
         {
-            soundPlayer.Stop();
-            soundPlayer.Dispose();
+            //soundPlayer.Stop();
+            //soundPlayer.Dispose();
+            wm.controls.stop();
             run = false;
         }
-        
-        void PrepareMusic(System.IO.Stream music)
+        public void pauseControl()
         {
-            soundPlayer = new System.Media.SoundPlayer(music);
+            if (paused)
+            {
+                paused = false;
+                recoverGame();
+            }
+            else
+            {
+                paused = true;
+                pauseGame();
+            }
+        }
+        
+        void PrepareMusic(string music)
+        {
+            wm.URL = music;
+            //soundPlayer = new System.Media.SoundPlayer(music);
         }
         void PrepareTrack(int trackNum, string trackInfo)
         {
@@ -112,6 +121,21 @@ namespace WindowsFormsApp2
             }
             sr.Close();
         }
+        void pauseGame()
+        {
+            //soundPlayer.Stop();
+            pauseTime = Info.now();
+            wm.controls.pause();
+            run = false;
+        }
+        void recoverGame()
+        {
+            run = true;
+            wm.controls.play();
+            startTime += Info.now() - pauseTime - Info.pauseOffset;
+            new Task(gaming).Start();
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void judge()
         {//检测note
             long gameTime = GameTime();
@@ -120,15 +144,27 @@ namespace WindowsFormsApp2
                 trackJudge(gameTime, i);
             }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void trackJudge(long gameTime, int trackNo)
         {
             int stat = tracks[trackNo].judge(gameTime);
             if (stat == Info.noAct) return;
-            judgeQue[trackNo] = new judgeNode(stat, trackNo, gameTime + Info.showJudge);
+            int epl = Info.mid;
+            if (stat > Info.lShift)
+            {
+                stat -= Info.lShift;
+                epl = Info.late;
+            }
+            else if (stat > Info.eShift)
+            {
+                stat -= Info.eShift;
+                epl = Info.early;
+            }
+            judgeQue[trackNo] = new judgeNode(stat, trackNo, gameTime + Info.showJudge, epl);
             if(stat == Info.miss)
             {
                 combo = 0;
-                
+                judgeQue[trackNo].EPL = Info.miss;
                 return;
             }
             combo++;
@@ -136,6 +172,7 @@ namespace WindowsFormsApp2
                 maxCombo = combo;
             Score += Info.scoreFrac * stat;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void paint(Graphics g)
         {
             if(combo >= Info.minComboToShow)
@@ -147,7 +184,10 @@ namespace WindowsFormsApp2
                 for(int j = 0; j < tracks[i].track.Count; j++)
                 {
                     note cur = tracks[i].track[j];
-                    //if (cur.start - gameTime > 5000) break;
+                    if(Info.baseJudgeLine - (cur.start - gameTime) * Info.speed < Info.noteComingDis)
+                    {
+                        break;
+                    }
                     long deltaTime = cur.end - gameTime;
                     int chose = 1;
                     if (i == 0 || i == 3) chose = 0;
@@ -156,7 +196,7 @@ namespace WindowsFormsApp2
                         float noShift = Info.baseJudgeLine - Info.speed * deltaTime;
                         float y = noShift - Info.imgShift;
                         paintClick(i, chose, y, cacheG);
-                        paintPerfect(i, noShift, cacheG);
+                        paintPerfectLine(i, noShift, cacheG);
                     }
                     else
                     {
@@ -171,44 +211,58 @@ namespace WindowsFormsApp2
                     paintHit(i, cacheG);
                 }
             }
+            paintJudgeStat(gameTime, cacheG);
+            g.DrawImage(cacheImage, 0, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void paintJudgeStat(long gameTime, Graphics g)
+        {
             for(int i = 0; i < trackNum; i++)
             {
                 if (judgeQue[i] == null) continue;
                 if(gameTime < judgeQue[i].end)
                 {
-                    cacheG.DrawString(Info.judgeImg[judgeQue[i].stat], Info.drawFont, Info.drawBrush, Info.trackX[i], Info.baseJudgeLine - 150);
+                    cacheG.DrawString(Info.judgeImg[judgeQue[i].stat], Info.drawFont, Info.judgeBrushes[judgeQue[i].stat], Info.trackX[i], Info.baseJudgeLine - 150);
+                    cacheG.DrawString(Info.eplImg[judgeQue[i].EPL], Info.eplFont, Info.statBrushes[judgeQue[i].EPL], Info.trackX[i], Info.baseJudgeLine - 130);
                 }
             }
-            g.DrawImage(cacheImage, 0, 0);
+
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void paintCombo(Graphics g)
         {
-            g.DrawString("combo      " + combo.ToString(), Info.drawFont, Info.drawBrush,Info.trackX[1] - Info.xShift, Info.baseJudgeLine - 200);
+            g.DrawString("combo      " + combo.ToString(), Info.drawFont, Info.comboBrush,Info.trackX[1] - Info.xShift, Info.baseJudgeLine - 200);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void paintScore(Graphics g)
         {
-            g.DrawString("score     " + Score.ToString(), Info.drawFont, Info.drawBrush, Info.trackX[1] - Info.xShift, Info.baseJudgeLine - 300);
+            g.DrawString("score     " + Score.ToString(), Info.drawFont, Info.scoreBrush, Info.trackX[1] - Info.xShift, Info.baseJudgeLine - 300);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void paintClick(int track, int chose, float y, Graphics g)
         {
             g.DrawImage(Info.clickimg[chose], Info.trackX[track], y, Info.noteWeight, 40);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void paintHold(int track, int chose, float y, float len, Graphics g)
         {
             g.DrawImage(Info.holdimg[chose], Info.trackX[track], y, Info.noteWeight, len);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void paintJudgeLine(Graphics g)
         {
             g.DrawImage(Info.judgeLine, Info.trackX[0] - Info.xShift, Info.baseJudgeLine - 3, 4*Info.noteWeight + 2 * Info.xShift, 6);
         }
-        void paintPerfect(int track, float y, Graphics g)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void paintPerfectLine(int track, float y, Graphics g)
         {
             g.DrawImage(Info.perfectLine, Info.trackX[track], y, Info.noteWeight, 2);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void paintHit(int track, Graphics g)
         {
             g.DrawImage(Info.hit, Info.trackX[track], Info.baseJudgeLine, Info.noteWeight, 60);
         }
-
     }
 }

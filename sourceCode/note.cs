@@ -24,11 +24,13 @@ namespace WindowsFormsApp2
         public int stat;
         public int track;
         public long end;
-        public judgeNode(int stat, int track, long end)
+        public int EPL;//early, perfect, late
+        public judgeNode(int stat, int track, long end, int epl)
         {
             this.stat = stat;
             this.track = track;
             this.end = end;
+            EPL = epl;
         }
     }
 }

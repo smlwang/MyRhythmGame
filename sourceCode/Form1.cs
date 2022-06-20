@@ -36,6 +36,9 @@ namespace WindowsFormsApp2
             }else if(e.KeyCode== Keys.K)
             {
                 chose = 3;
+            }else if(e.KeyCode == Keys.Escape)
+            {
+                newgame.pauseControl();
             }
             if(newgame != null)
                 newgame.lisenKey(chose, true);
@@ -43,7 +46,7 @@ namespace WindowsFormsApp2
 
         private void button1_click(object sender, EventArgs e)
         {
-            newgame = new game(4, Properties.Resources.testMusic, "data.dat", 0, pictureBox1.ClientSize, pictureBox1.CreateGraphics());
+            newgame = new game(4, "E:\\WindowsFormsApp2\\Resources\\Fireflies (Funk Fiction remix).wav", "data.dat", 0, pictureBox1.ClientSize, pictureBox1.CreateGraphics());
             KeyPreview = true;
             newgame.starts();
             timer1.Enabled = true;

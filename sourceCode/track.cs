@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace WindowsFormsApp2
 {
@@ -18,6 +19,7 @@ namespace WindowsFormsApp2
         {
             track = new List<note>();
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void keyChange(bool pressed)
         {   
             keyPressed = pressed;
@@ -32,6 +34,8 @@ namespace WindowsFormsApp2
             pressCancel++;
         }
          //deltaTime 距离游戏开始时间
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int judge(long gameTime)
         {
             if (!keyPressed)
@@ -109,29 +113,40 @@ namespace WindowsFormsApp2
                 return Info.noAct;
             }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int clickJudge(long deltaTime)
         {
+            int stat;
             if(deltaTime >= 0)
             {
-                if (deltaTime <= Info.perfectJudge)
+                if (deltaTime <= Info.truePerfect)
                     return Info.perfect;
-                if(deltaTime <= Info.greatJudge)
-                    return Info.great;
-                if(deltaTime <= Info.goodJudge)
-                    return Info.good;
+                if (deltaTime <= Info.perfectJudge)
+                    stat = Info.perfect;
+                else if(deltaTime <= Info.greatJudge)
+                    stat = Info.great;
+                else if(deltaTime <= Info.goodJudge)
+                    stat = Info.good;
+                else stat = Info.miss;
+                stat += Info.eShift;
             }
             else
             {
                 deltaTime = -deltaTime;
-                if (deltaTime <= Info.perfectJudge)
+                if (deltaTime <= Info.truePerfect)
                     return Info.perfect;
-                if(deltaTime <= Info.greatJudge)
-                    return Info.great;
-                if (deltaTime < Info.goodJudge)
-                    return Info.good;
+                if (deltaTime <= Info.perfectJudge)
+                    stat = Info.perfect;
+                else if(deltaTime <= Info.greatJudge)
+                    stat = Info.great;
+                else if(deltaTime <= Info.goodJudge)
+                    stat = Info.good;
+                else stat = Info.miss;
+                stat += Info.lShift; 
             }
-            return Info.miss;
+            return stat;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void keyReset()
         {
             keyPress = false;
