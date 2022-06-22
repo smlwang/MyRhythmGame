@@ -1,88 +1,48 @@
 ﻿using System;
-using System.Drawing;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WindowsFormsApp2
 {
     public partial class Form1 : Form
     {
-        game newgame;
-        
+        static Form1 mainForm;
+        public static Form1 Instance
+        {
+            get
+            {
+                if(mainForm == null)
+                {
+                    mainForm = new Form1();
+                }
+                return mainForm;
+            }
+        }
+        public Panel view
+        {
+            get { return viewControl; }
+            set { viewControl = value; }
+        }
         public Form1()
         {
             InitializeComponent();
             KeyPreview = false;
         }
+
         private void Form1_Load(object sender, EventArgs e)
         {
-            
+            mainForm = this;
+            mainView mw = new mainView();
+            mw.Dock = DockStyle.Fill;
+            gameForm gf = new gameForm();
+            gf.Dock = DockStyle.Fill;
+            viewControl.Controls.Add(mw);
+            viewControl.Controls.Add(gf);
+            gf.Enabled = false;
+            viewControl.Controls["mainView"].BringToFront();
         }
 
         
-        private void Form1_KeyDown(object sender, KeyEventArgs e)
-        {
-            int chose = -1;
-            if(e.KeyCode == Keys.D)
-            {
-                chose = 0;
-            }else if(e.KeyCode == Keys.F)
-            {
-                chose = 1;
-            }else if (e.KeyCode == Keys.J)
-            {
-                chose = 2;
-            }else if(e.KeyCode== Keys.K)
-            {
-                chose = 3;
-            }else if(e.KeyCode == Keys.Escape)
-            {
-                newgame.pauseControl();
-            }
-            if(newgame != null)
-                newgame.lisenKey(chose, true);
-        }
-
-        private void button1_click(object sender, EventArgs e)
-        {
-            newgame = new game(4, "E:\\WindowsFormsApp2\\Resources\\Fireflies (Funk Fiction remix).wav", "data.dat", 0, pictureBox1.ClientSize, pictureBox1.CreateGraphics());
-            KeyPreview = true;
-            newgame.starts();
-            timer1.Enabled = true;
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            newgame.exitGame();
-            KeyPreview = false;
-            timer1.Enabled = false;
-        }
-
-        private void Form1_KeyUp(object sender, KeyEventArgs e)
-        {
-            int chose = -1;
-            if(e.KeyCode == Keys.D)
-            {
-                chose = 0;
-            }else if(e.KeyCode == Keys.F)
-            {
-                chose = 1;
-            }else if (e.KeyCode == Keys.J)
-            {
-                chose = 2;
-            }else if(e.KeyCode== Keys.K)
-            {
-                chose = 3;
-            }
-            if(newgame != null)
-                newgame.lisenKey(chose, false);
-
-        }
-
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-        }
+ 
+      
     }
 }

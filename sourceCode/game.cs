@@ -3,6 +3,8 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Threading;
+
 namespace WindowsFormsApp2
 {
     public class game 
@@ -11,49 +13,114 @@ namespace WindowsFormsApp2
         long Score;
         int trackNum;
         bool paused = false;
+        float speed;
         public static long startTime;
         public int maxCombo;
         public Track[] tracks;
         public long pauseTime;
+        string trackInfo;
+        string music;
+        long offset;
         judgeNode []judgeQue;
         WMPLib.WindowsMediaPlayer wm = new WMPLib.WindowsMediaPlayer();
-        //System.Media.SoundPlayer soundPlayer;
         
-        bool run = true;
-        Bitmap cacheImage;
-        Graphics cacheG;
-        Graphics g;
-        
-        //offset 为正 音符出现更晚， 负 更早
-        public game(int trackNum, string music, string trackInfo, long offset, Size size, Graphics g)
-        {//TODO: 加载音乐和铺面
+        public bool run = true;
+        public bool end = false;
+        Bitmap cacheImage, cacheImgend;
+        Graphics cacheG, cacheEnd;
+        Graphics g, endg;
+        public void exit()
+        {
+            wm.controls.stop();
+            run = false;
+        }
+        //offset 为正 音乐出现更晚， 负 更早
+        public game(int trackNum, string music, string trackInfo, Size size, Graphics g, Size endsize, Graphics endg)
+        {
+            this.trackNum = trackNum;
+            this.music = music;
+            this.trackInfo = trackInfo;
+            cacheImage = new Bitmap(size.Width, size.Height);
+            cacheImgend = new Bitmap(endsize.Width, endsize.Height);
+            cacheG = Graphics.FromImage(cacheImage);
+            cacheEnd = Graphics.FromImage(cacheImgend);
+            this.g = g;
+            this.endg = endg;
+        }
+        void finalScore()
+        {
+            cacheEnd.Clear(Color.DarkOrange);
+            cacheEnd.DrawString("score : " + Score, Info.drawFont, Info.scoreBrush, 0, 0);
+            cacheEnd.DrawString("MaxCombo : " + maxCombo, Info.drawFont, Info.scoreBrush, 0, 30);
+            endg.DrawImage(cacheImgend, 0, 0);
+        }
+        public void prepare()
+        {
             Score = 0;
             combo = 0;
             maxCombo = 0;
-            cacheImage = new Bitmap(size.Width, size.Height);
-            cacheG = Graphics.FromImage(cacheImage);
+            wm.settings.volume = 100;
+            startTime = offset;
             judgeQue = new judgeNode[trackNum];
+            cacheEnd.Clear(Color.White);
+            endg.Clear(Color.White);
             PrepareMusic(music);
             PrepareTrack(trackNum, trackInfo);
-            startTime -= offset;
-            this.g = g;
         }
         public void starts()//游戏开始
         {
             wm.settings.volume = 100;
-            wm.controls.play();
-            startTime = Info.now();
+            prepare();
             run = true;
-            new Task(gaming).Start();
+            startGaming();
         }
-        public void gaming()
+        public void reStart()
+        {
+            wm.controls.stop();
+            run = true;
+            end = false;
+            paused = false;
+            prepare();
+            startTime = -offset;
+            startGaming();
+        }
+        public void Set(float speed, long offset)
+        {
+            this.speed = speed;
+            this.offset = offset;
+            startTime -= offset;
+        }
+        long endTime = 0;
+        void gameRunning()
         {
             while (run)
             {   
                 cacheG.Clear(Color.Black);
                 judge();
                 paint(g);   
+                if (end)
+                {
+                    finalScore();
+                    if (endTime == 0)
+                        endTime = Info.now() + 5000;
+                    wm.settings.volume = Math.Max(0, (int)(endTime - Info.now()) / 50);
+                    if(Info.now() > endTime)
+                    {
+                        run = false;
+                    }
+                }
             }
+            if (paused)
+            {
+                cacheG.DrawString(Info.pauseImg, Info.pauseFont, Info.pauseBrush, Info.trackX[1], Info.baseJudgeLine - 250);
+                g.DrawImage(cacheImage, 0, 0);
+            }
+        }
+        public void startGaming()
+        {
+            wm.controls.play();
+            startTime += Info.now();
+            new Task(gameRunning).Start();
         }
         public void lisenKey(int chose, bool stat)
         {
@@ -64,15 +131,9 @@ namespace WindowsFormsApp2
         {
             return Info.now() - startTime;
         }
-        public void exitGame()
-        {
-            //soundPlayer.Stop();
-            //soundPlayer.Dispose();
-            wm.controls.stop();
-            run = false;
-        }
         public void pauseControl()
         {
+            if (end) return;
             if (paused)
             {
                 paused = false;
@@ -88,14 +149,13 @@ namespace WindowsFormsApp2
         void PrepareMusic(string music)
         {
             wm.URL = music;
-            //soundPlayer = new System.Media.SoundPlayer(music);
         }
         void PrepareTrack(int trackNum, string trackInfo)
         {
             this.trackNum = trackNum;
             tracks = new Track[trackNum];
             for(int i = 0; i < trackNum; i++)
-                    tracks[i] = new Track();
+                tracks[i] = new Track();
             FileStream fs = new FileStream(trackInfo, FileMode.Open);
             StreamReader sr = new StreamReader(fs); 
             string[] src = sr.ReadToEnd().Split(' ');
@@ -120,28 +180,35 @@ namespace WindowsFormsApp2
                 i += 3; 
             }
             sr.Close();
+            fs.Close();
         }
         void pauseGame()
         {
-            //soundPlayer.Stop();
             pauseTime = Info.now();
             wm.controls.pause();
             run = false;
         }
         void recoverGame()
         {
+            if (end) return;
             run = true;
             wm.controls.play();
             startTime += Info.now() - pauseTime - Info.pauseOffset;
-            new Task(gaming).Start();
+            new Task(gameRunning).Start();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void judge()
         {//检测note
             long gameTime = GameTime();
+            bool noteAllDone = true;
             for (int i = 0; i < trackNum; i++)
             {
                 trackJudge(gameTime, i);
+                if (tracks[i].track.Count > 0) noteAllDone = false;
+            }
+            if (noteAllDone)
+            {
+                end = true;
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -184,7 +251,7 @@ namespace WindowsFormsApp2
                 for(int j = 0; j < tracks[i].track.Count; j++)
                 {
                     note cur = tracks[i].track[j];
-                    if(Info.baseJudgeLine - (cur.start - gameTime) * Info.speed < Info.noteComingDis)
+                    if(Info.baseJudgeLine - (cur.start - gameTime) * speed < Info.noteComingDis)
                     {
                         break;
                     }
@@ -193,15 +260,15 @@ namespace WindowsFormsApp2
                     if (i == 0 || i == 3) chose = 0;
                     if(cur.kind == 1)
                     {
-                        float noShift = Info.baseJudgeLine - Info.speed * deltaTime;
+                        float noShift = Info.baseJudgeLine - speed * deltaTime;
                         float y = noShift - Info.imgShift;
                         paintClick(i, chose, y, cacheG);
                         paintPerfectLine(i, noShift, cacheG);
                     }
                     else
                     {
-                        float y = Info.baseJudgeLine - Info.speed * deltaTime;
-                        float len = Info.speed * (cur.end - cur.start);
+                        float y = Info.baseJudgeLine - speed * deltaTime;
+                        float len = speed * (cur.end - cur.start);
                         paintHold(i, chose, y, len, cacheG);
                     }
                 }

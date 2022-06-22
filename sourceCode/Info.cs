@@ -6,10 +6,6 @@ namespace WindowsFormsApp2
 {
     public static class Info
     {
-        //按键
-        public static int pressed = 1;
-        public static int unpressed = 2;
-
         //判定区间 ms
         public static long goodJudge = 190;
         public static long greatJudge = 90;
@@ -22,7 +18,7 @@ namespace WindowsFormsApp2
         public static int great = 2;
         public static int perfect = 3;
         //暂停偏移调整
-        public static long pauseOffset = 4;
+        public static long pauseOffset = -10;
 
         //分数计算
         public static long scoreFrac = 10;
@@ -71,5 +67,33 @@ namespace WindowsFormsApp2
         public static SolidBrush comboBrush = new SolidBrush(Color.Peru);
 
         public static SolidBrush scoreBrush = new SolidBrush(Color.GreenYellow);
+        public static SolidBrush pauseBrush = new SolidBrush(Color.Green);
+        public static Font pauseFont = new Font("Arial", 30);
+        public static string pauseImg = "Paused";
+
     }
+    public class gameInfo 
+    {
+        public string musicInfo;
+        public string trackInfo;
+        public int trackNum;
+        public long offset;
+        
+        public gameInfo(string musicInfo, string trackInfo)
+        {
+            this.musicInfo = musicInfo;
+            this.trackInfo = trackInfo;
+        }
+    }
+    public class gameSet
+    {
+        public long offset;
+        public float speed;
+        public gameSet(float speed, long offset)
+        {
+            this.offset = offset;
+            this.speed = speed;
+        }
+    }
+
 }
