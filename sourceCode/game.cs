@@ -21,6 +21,8 @@ namespace WindowsFormsApp2
         string trackInfo;
         string music;
         long offset;
+        int allnote = 0;
+        int []noteCount;
         judgeNode []judgeQue;
         WMPLib.WindowsMediaPlayer wm = new WMPLib.WindowsMediaPlayer();
         
@@ -50,12 +52,18 @@ namespace WindowsFormsApp2
         void finalScore()
         {
             cacheEnd.Clear(Color.DarkOrange);
-            cacheEnd.DrawString("score : " + Score, Info.drawFont, Info.scoreBrush, 0, 0);
-            cacheEnd.DrawString("MaxCombo : " + maxCombo, Info.drawFont, Info.scoreBrush, 0, 30);
+            cacheEnd.DrawString("score : " + Score, Info.drawFont, Info.scoreBrush,5, 20);
+            cacheEnd.DrawString("MaxCombo : " + maxCombo, Info.drawFont, Info.scoreBrush, 0, 50);
+            for (int i = 3; i >= 0; i--)
+                cacheEnd.DrawString(Info.judgeImg[i] + ": " + noteCount[i].ToString(), Info.drawFont, Info.scoreBrush, 30, 100 + (3 - i) * 30);
+            if(allnote > 0)
+                cacheEnd.DrawString(string.Format("acc : {0:F2} %", (double)Score * 100 / (double)(allnote * Info.scoreFrac * Info.perfect)), Info.drawFont, Info.scoreBrush, 20, 60 + 5 * 30 + 40);
             endg.DrawImage(cacheImgend, 0, 0);
         }
         public void prepare()
         {
+            noteCount = new int[4]; 
+            allnote = 0;
             Score = 0;
             combo = 0;
             maxCombo = 0;
@@ -66,6 +74,8 @@ namespace WindowsFormsApp2
             endg.Clear(Color.White);
             PrepareMusic(music);
             PrepareTrack(trackNum, trackInfo);
+            cacheEnd.Clear(Color.WhiteSmoke);
+            endg.Clear(Color.WhiteSmoke);
         }
         public void starts()//游戏开始
         {
@@ -158,29 +168,35 @@ namespace WindowsFormsApp2
                 tracks[i] = new Track();
             FileStream fs = new FileStream(trackInfo, FileMode.Open);
             StreamReader sr = new StreamReader(fs); 
-            string[] src = sr.ReadToEnd().Split(' ');
-            for(int i = 0; i < src.Length;)
+            string[] src = sr.ReadToEnd().Split('\n');
+            for(int i = 0; i < src.Length; i++)
             {
-                int kind = (int)Int64.Parse(src[i]);//note类型
-                int trackNo = (int)Int64.Parse(src[i + 1]) - 1;//轨道
-                long time = (long)(float.Parse(src[i + 2]) * 1000f);//时间
+                src[i] = src[i].TrimEnd(Info.spaceChar);
+                string[] note = src[i].Split(' ');
+                int kind = (int)Int64.Parse(note[0]);//note类型
+                int trackNo = (int)Int64.Parse(note[1]) - 1;//轨道
+                long time = Int64.Parse(note[2]);//时间
                 note newNote = new note
                 {
                     kind = kind,
                     start = time,
                     end = time,
                 };
-                if(kind == 2)
+                allnote++;
+                if(kind == 2)//如果是长条就再读一个 endTime
                 {
-                    long endTime = (long)(float.Parse(src[i + 3]) * 1000);
+                    allnote++;
+                    long endTime = Int64.Parse(note[3]);
                     newNote.end = endTime;
-                    i++;
                 }
                 tracks[trackNo].track.Add(newNote);
-                i += 3; 
             }
             sr.Close();
             fs.Close();
+            for(int i = 0; i < trackNum; i++)
+            {
+                tracks[i].track.Sort();
+            }
         }
         void pauseGame()
         {
@@ -217,16 +233,17 @@ namespace WindowsFormsApp2
             int stat = tracks[trackNo].judge(gameTime);
             if (stat == Info.noAct) return;
             int epl = Info.mid;
-            if (stat > Info.lShift)
+            if (stat >= Info.lShift)
             {
                 stat -= Info.lShift;
                 epl = Info.late;
             }
-            else if (stat > Info.eShift)
+            else if (stat >= Info.eShift)
             {
                 stat -= Info.eShift;
                 epl = Info.early;
             }
+            noteCount[stat]++;
             judgeQue[trackNo] = new judgeNode(stat, trackNo, gameTime + Info.showJudge, epl);
             if(stat == Info.miss)
             {
@@ -238,6 +255,10 @@ namespace WindowsFormsApp2
             if(combo > maxCombo)
                 maxCombo = combo;
             Score += Info.scoreFrac * stat;
+            if(stat == Info.perfect && epl == Info.mid)
+            {
+                Score += 1;
+            }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void paint(Graphics g)
@@ -287,9 +308,13 @@ namespace WindowsFormsApp2
             for(int i = 0; i < trackNum; i++)
             {
                 if (judgeQue[i] == null) continue;
+
                 if(gameTime < judgeQue[i].end)
                 {
-                    cacheG.DrawString(Info.judgeImg[judgeQue[i].stat], Info.drawFont, Info.judgeBrushes[judgeQue[i].stat], Info.trackX[i], Info.baseJudgeLine - 150);
+                    string space = "";
+                    if (judgeQue[i].stat != Info.perfect)
+                        space = " ";
+                    cacheG.DrawString(space + Info.judgeImg[judgeQue[i].stat], Info.drawFont, Info.judgeBrushes[judgeQue[i].stat], Info.trackX[i], Info.baseJudgeLine - 150);
                     cacheG.DrawString(Info.eplImg[judgeQue[i].EPL], Info.eplFont, Info.statBrushes[judgeQue[i].EPL], Info.trackX[i], Info.baseJudgeLine - 130);
                 }
             }

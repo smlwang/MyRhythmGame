@@ -29,6 +29,11 @@ namespace WindowsFormsApp2
             back.Enabled = true;
             restart.Visible = true;
             restart.Enabled = true;
+            if (!game.end)
+            {
+                backtogame.Visible = true;
+                backtogame.Enabled = true;
+            }
         }
         public void stoppedHide()
         {
@@ -36,6 +41,8 @@ namespace WindowsFormsApp2
             back.Enabled = false;
             restart.Visible = false;
             restart.Enabled = false;
+            backtogame.Visible = false;
+            backtogame.Enabled = false;
         }
         public Keys[] keyFlect;
         public gameInfo gameInfo;
@@ -66,6 +73,7 @@ namespace WindowsFormsApp2
             }
             if (e.KeyCode == Keys.Escape)
             {
+                if (game.end) return;
                 game.pauseControl();
                 if (!game.run)
                 {
@@ -100,10 +108,8 @@ namespace WindowsFormsApp2
         {
             stoppedHide();
             Focus();
+            timer.Start();
             game.reStart();
-        }
-        private void gameForm_Enter(object sender, EventArgs e)
-        {
         }
 
         private void back_Click(object sender, EventArgs e)
@@ -122,6 +128,16 @@ namespace WindowsFormsApp2
             {
                 stoppedShow();
                 timer.Stop();
+            }
+        }
+
+        private void backtogame_Click(object sender, EventArgs e)
+        {
+            game.pauseControl();
+            Focus();
+            if (game.run)
+            {   
+                stoppedHide();    
             }
         }
     }

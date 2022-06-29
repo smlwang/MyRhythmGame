@@ -40,6 +40,8 @@ namespace WindowsFormsApp2
             string[] s = sr.ReadToEnd().Split('\n');
             for(int i = 0; i < s.Length; i += 2)
             {
+                s[i] = s[i].TrimEnd(Info.spaceChar);
+                s[i + 1] = s[i + 1].TrimEnd(Info.spaceChar);
                 songlist.Add(new gameInfo(s[i], s[i + 1]));
             }
             for(int i = 0; i < songlist.Count; i++)
@@ -49,10 +51,10 @@ namespace WindowsFormsApp2
         }
         private void start_Click(object sender, EventArgs e)
         {
-            Form1.Instance.view.Controls["gameForm"].BringToFront();
-            gameForm.Instence.Enabled = true;
             int idx = songList.SelectedIndex;
-            if(idx == -1) return;
+            if(idx < 0 || idx >= songlist.Count) return;
+            gameForm.Instence.Enabled = true;
+            Form1.Instance.view.Controls["gameForm"].BringToFront();
             gameInfo = songlist[idx];
             gameForm.Instence.gameStart(keyFlect, gameInfo, gameset);
             Enabled = false;

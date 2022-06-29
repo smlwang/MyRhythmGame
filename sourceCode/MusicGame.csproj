@@ -113,7 +113,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="Resources\data.dat" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -123,9 +122,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\QQ图片20220503203427.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Fireflies %28Funk Fiction remix%29.wav" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\longnote.png" />

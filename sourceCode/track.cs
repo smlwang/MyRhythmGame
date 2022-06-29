@@ -84,32 +84,49 @@ namespace WindowsFormsApp2
             }
             else
             {
-                if (note.end < gameTime - Info.perfectJudge)//长条尾判
+                if (!keyPress || note.end < gameTime)
+                {
+                    if (note.dead)
+                    {
+                        track.RemoveAt(0);
+                        return Info.perfect;
+                    }
+                }
+                if(note.end < gameTime - Info.perfectJudge)
                 {
                     track.RemoveAt(0);
-                    if (note.preCheck && keyPress)
-                        return Info.perfect;
                     return Info.miss;
+                }
+                long tailJudge = -Info.greatJudge;
+                if (note.preCheck && keyPress)
+                    tailJudge = Info.perfectJudge + 10;
+                if (note.end < gameTime + tailJudge)//长条尾判
+                {
+                    if (note.preCheck && keyPress)
+                    {
+                        note.dead = true;
+                        return Info.noAct;
+                    }
                 }
                 if (!note.preCheck)//长条头判
                 {
                     if (keyHold) return Info.noAct;
                     if (Math.Abs(deltaTime) <= Info.greatJudge)
                     {
-                        track[0].preCheck = true;
+                        note.preCheck = true;
                         keyHold = keyPress;
                         return Info.perfect;
                     }
                     else if (deltaTime < -Info.greatJudge)
                     {
-                        track[0].preCheck = true;
+                        note.preCheck = true;
                         keyHold = keyPress;
                         return Info.good;
                     }
                     return Info.noAct;
                 }
                 if (note.preCheck) 
-                    track[0].start = Math.Max(gameTime, note.start);
+                    note.start = Math.Max(gameTime, note.start);
                 return Info.noAct;
             }
         }

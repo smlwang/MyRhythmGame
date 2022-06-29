@@ -6,6 +6,7 @@ namespace WindowsFormsApp2
 {
     public static class Info
     {
+        public static char[] spaceChar = new char[] { '\r', '\n' };
         //判定区间 ms
         public static long goodJudge = 190;
         public static long greatJudge = 90;
@@ -53,7 +54,7 @@ namespace WindowsFormsApp2
         public static Font drawFont = new Font("Arial", 16);
         public static SolidBrush[] statBrushes = { new SolidBrush(Color.DarkRed), new SolidBrush(Color.AliceBlue), new SolidBrush(Color.LightGoldenrodYellow), new SolidBrush(Color.Brown) };
         public static SolidBrush[] judgeBrushes = { new SolidBrush(Color.DarkRed), new SolidBrush(Color.AliceBlue), new SolidBrush(Color.GreenYellow), new SolidBrush(Color.LightGoldenrodYellow) };
-        public static string[] judgeImg = { "Miss", " Good", " Great", "Perfect" };
+        public static string[] judgeImg = { "Miss", "Good", "Great", "Perfect" };
         public static string[] eplImg = { "", "   early", "awesome", "    late" };
         public static Font eplFont = new Font("Arial", 12);
         

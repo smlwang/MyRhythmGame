@@ -12,6 +12,7 @@ namespace WindowsFormsApp2
         public long start;
         public long end;
         public bool preCheck;
+        public bool dead =false;
         public int CompareTo(note other)
         {
             if(start < other.start) return -1;

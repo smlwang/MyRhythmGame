@@ -32,6 +32,7 @@
             this.restart = new System.Windows.Forms.Button();
             this.back = new System.Windows.Forms.Button();
             this.endPic = new System.Windows.Forms.PictureBox();
+            this.backtogame = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.gameView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.endPic)).BeginInit();
             this.SuspendLayout();
@@ -46,7 +47,7 @@
             // 
             // restart
             // 
-            this.restart.Location = new System.Drawing.Point(920, 515);
+            this.restart.Location = new System.Drawing.Point(920, 542);
             this.restart.Name = "restart";
             this.restart.Size = new System.Drawing.Size(127, 48);
             this.restart.TabIndex = 2;
@@ -66,23 +67,33 @@
             // 
             // endPic
             // 
-            this.endPic.Location = new System.Drawing.Point(868, 219);
+            this.endPic.Location = new System.Drawing.Point(866, 67);
             this.endPic.Name = "endPic";
-            this.endPic.Size = new System.Drawing.Size(225, 151);
+            this.endPic.Size = new System.Drawing.Size(225, 335);
             this.endPic.TabIndex = 4;
             this.endPic.TabStop = false;
+            // 
+            // backtogame
+            // 
+            this.backtogame.Location = new System.Drawing.Point(919, 458);
+            this.backtogame.Name = "backtogame";
+            this.backtogame.Size = new System.Drawing.Size(127, 48);
+            this.backtogame.TabIndex = 5;
+            this.backtogame.Text = "continue";
+            this.backtogame.UseVisualStyleBackColor = true;
+            this.backtogame.Click += new System.EventHandler(this.backtogame_Click);
             // 
             // gameForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.backtogame);
             this.Controls.Add(this.endPic);
             this.Controls.Add(this.back);
             this.Controls.Add(this.restart);
             this.Controls.Add(this.gameView);
             this.Name = "gameForm";
             this.Size = new System.Drawing.Size(1179, 752);
-            this.Enter += new System.EventHandler(this.gameForm_Enter);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gameForm_KeyDown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.gameForm_KeyUp);
             ((System.ComponentModel.ISupportInitialize)(this.gameView)).EndInit();
@@ -97,5 +108,6 @@
         private System.Windows.Forms.Button restart;
         private System.Windows.Forms.Button back;
         private System.Windows.Forms.PictureBox endPic;
+        private System.Windows.Forms.Button backtogame;
     }
 }
